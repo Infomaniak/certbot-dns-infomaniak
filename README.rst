@@ -30,13 +30,13 @@ Usage
 
 .. code-block:: bash
 
-export INFOMANIAK_API_TOKEN=xxx
-certbot certonly \
---authenticator certbot-dns-infomaniak:dns-infomaniak \
---server https://acme-staging-v02.api.letsencrypt.org/directory \
---agree-tos \
---rsa-key-size 4096 \
--d 'death.star'
+   export INFOMANIAK_API_TOKEN=xxx
+   certbot certonly \
+   --authenticator certbot-dns-infomaniak:dns-infomaniak \
+   --server https://acme-staging-v02.api.letsencrypt.org/directory \
+   --agree-tos \
+   --rsa-key-size 4096 \
+   -d 'death.star'
 
 Acknowledgments
 ---------------
