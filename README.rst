@@ -1,7 +1,7 @@
 certbot-dns-infomaniak
 ======================
 
-Infomaniak DNS Authenticator plugin for certbot
+Infomaniak_ DNS Authenticator plugin for certbot_
 
 This plugin enables usage of Infomaniak public API to complete``dns-01`` challenges.
 
@@ -11,10 +11,10 @@ This plugin enables usage of Infomaniak public API to complete``dns-01`` challen
 Issue a token
 -------------
 
-At your Infomaniak manager dashboard, to to the API section and generate a token
+At your Infomaniak manager dashboard_, to to the API section and generate a token
 with "Domain" scope
 
-.. _API Dashboard: https://manager.infomaniak.com/v3/infomaniak-api
+.. _dashboard: https://manager.infomaniak.com/v3/infomaniak-api
 
 Then, export this token as an environment variable:
 
