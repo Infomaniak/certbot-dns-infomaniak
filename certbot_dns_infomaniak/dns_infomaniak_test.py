@@ -3,12 +3,9 @@
 import unittest
 
 import mock
-import json
 import logging
 import requests_mock
 
-from certbot import errors
-from certbot.compat import os
 from certbot.errors import PluginError
 from certbot.plugins import dns_test_common
 from certbot.plugins.dns_test_common import DOMAIN
@@ -108,7 +105,7 @@ class APIDomainTest(unittest.TestCase):
             f"/1/product?service_name=domain&customer_name={DOMAIN}",
             data=[],
         )
-        with self.assertRaises(errors.PluginError) as context:
+        with self.assertRaises(PluginError):
             self.client.add_txt_record(
                 DOMAIN, self.record_name, self.record_content, self.record_ttl
             )
@@ -119,7 +116,7 @@ class APIDomainTest(unittest.TestCase):
             "not_authorized",
             "Authorization required",
         )
-        with self.assertRaises(errors.PluginError) as context:
+        with self.assertRaises(PluginError):
             self.client.add_txt_record(
                 DOMAIN, self.record_name, self.record_content, self.record_ttl
             )
@@ -172,7 +169,7 @@ class APIDomainTest(unittest.TestCase):
             f"/1/product?service_name=domain&customer_name={DOMAIN}",
             data=[],
         )
-        with self.assertRaises(errors.PluginError) as context:
+        with self.assertRaises(PluginError):
             self.client.del_txt_record(
                 DOMAIN, self.record_name, self.record_content, self.record_ttl
             )
@@ -183,7 +180,7 @@ class APIDomainTest(unittest.TestCase):
             "not_authorized",
             "Authorization required",
         )
-        with self.assertRaises(errors.PluginError) as context:
+        with self.assertRaises(PluginError):
             self.client.del_txt_record(
                 DOMAIN, self.record_name, self.record_content, self.record_ttl
             )

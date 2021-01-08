@@ -2,7 +2,6 @@
 import json
 import logging
 import os
-import sys
 
 import requests
 import zope.interface
@@ -143,9 +142,11 @@ class _APIDomain:
             fqdn = f"{source}.{domain}"
         return list(
             filter(
-                lambda x: x["source_idn"] == fqdn
-                and x["type"] == rtype
-                and x["target"] == target,
+                lambda x: (
+                    x["source_idn"] == fqdn
+                    and x["type"] == rtype
+                    and x["target"] == target
+                ),
                 self.get_request(f"/1/domain/{domain_id}/dns/record"),
             )
         )
@@ -160,7 +161,7 @@ class _APIDomain:
                     result[0]["id"],
                     domain,
                 )
-            domain = domain[domain.find(".") + 1 :]
+            domain = domain[domain.find(".") + 1:]
         raise errors.PluginError("Domain not found")
 
     def add_txt_record(self, domain, source, target, ttl=300):
