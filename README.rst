@@ -10,6 +10,9 @@ Issue a token
 
 At your Infomaniak manager dashboard, to to the API section and generate a token
 with "Domain" scope
+
+https://manager.infomaniak.com/v3/infomaniak-api
+
 Then, export this token as an environment variable:
 
 ::
