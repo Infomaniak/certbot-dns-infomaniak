@@ -3,7 +3,7 @@ certbot-dns-infomaniak
 
 Infomaniak DNS Authenticator plugin for certbot
 
-This plugin enables usage of Infomaniak public API to complete``dns-01`` challenges.
+This plugin enables usage of Infomaniak public API to complete ``dns-01`` challenges.
 
 Issue a token
 -------------
@@ -28,8 +28,6 @@ Installation
 
 Usage
 -----
-
-::
 
 .. code-block:: bash
 
