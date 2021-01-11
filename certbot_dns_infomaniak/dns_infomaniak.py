@@ -65,7 +65,7 @@ class _APIDomain:
         self.session = requests.Session()
         self.session.headers.update({"Authorization": "Bearer {token}".format(token=self.token)})
 
-    def get_request(self, url, payload=None):
+    def _get_request(self, url, payload=None):
         """Performs a GET request against API
 
         :param str url: relative url
@@ -88,7 +88,7 @@ class _APIDomain:
                 )
             )
 
-    def post_request(self, url, payload):
+    def _post_request(self, url, payload):
         """Performs a POST request
 
         :param str url: relative url
@@ -109,7 +109,7 @@ class _APIDomain:
                 )
             )
 
-    def delete_request(self, url):
+    def _delete_request(self, url):
         """Performs a POST request
 
         :param str url: relative url
@@ -129,7 +129,7 @@ class _APIDomain:
                 )
             )
 
-    def get_records(self, domain, domain_id, record):
+    def _get_records(self, domain, domain_id, record):
         """Find record matching arguments
 
         :param str domain: domain name
@@ -154,11 +154,11 @@ class _APIDomain:
                     and x["type"] == record["type"]
                     and x["target"] == record["target"]
                 ),
-                self.get_request("/1/domain/{domain_id}/dns/record".format(domain_id=domain_id)),
+                self._get_request("/1/domain/{domain_id}/dns/record".format(domain_id=domain_id)),
             )
         )
 
-    def find_zone(self, domain):
+    def _find_zone(self, domain):
         """Finds the corresponding DNS zone through the API
 
         :param str domain: domain name
@@ -166,7 +166,7 @@ class _APIDomain:
         :returns: id and zone name
         """
         while "." in domain:
-            result = self.get_request(
+            result = self._get_request(
                 "/1/product?service_name=domain&customer_name={domain}".format(domain=domain),
             )
             if len(result) == 1:
@@ -187,7 +187,7 @@ class _APIDomain:
         """
         logger.debug("add_txt_record %s %s %s", domain, source, target)
 
-        (domain_id, domain_name) = self.find_zone(domain)
+        (domain_id, domain_name) = self._find_zone(domain)
         logger.debug("%s / %s", domain_id, domain_name)
 
         source = source[: source.rfind("." + domain_name)]
@@ -195,7 +195,7 @@ class _APIDomain:
         logger.debug("add_txt_record %s %s %s", domain_name, source, target)
 
         data = {"type": "TXT", "source": source, "target": target, "ttl": ttl}
-        self.post_request("/1/domain/{domain_id}/dns/record".format(domain_id=domain_id), data)
+        self._post_request("/1/domain/{domain_id}/dns/record".format(domain_id=domain_id), data)
 
     def del_txt_record(self, domain, source, target):
         """Delete a TXT DNS record from a domain
@@ -206,17 +206,19 @@ class _APIDomain:
 
         logger.debug("del_txt_record %s %s %s", domain, source, target)
 
-        (domain_id, domain_name) = self.find_zone(domain)
+        (domain_id, domain_name) = self._find_zone(domain)
 
         source = source[: source.rfind("." + domain_name)]
 
-        records = self.get_records(domain_name, domain_id,
-                                   {"type": "TXT", "source": source, "target": target})
+        records = self._get_records(
+            domain_name, domain_id,
+            {"type": "TXT", "source": source, "target": target},
+        )
         if records is None:
             raise errors.PluginError("Record not found")
         if len(records) > 1:
             raise errors.PluginError("Several records match")
         record_id = records[0]["id"]
 
-        self.delete_request("/1/domain/{domain_id}/dns/record/{record_id}".format(
+        self._delete_request("/1/domain/{domain_id}/dns/record/{record_id}".format(
             domain_id=domain_id, record_id=record_id))
