@@ -73,9 +73,9 @@ class _APIDomain:
         """
         url = self.baseUrl + url
         logger.debug("GET %s", url)
-        with self.session.get(url, params=payload) as r:
+        with self.session.get(url, params=payload) as req:
             try:
-                result = r.json()
+                result = req.json()
             except json.decoder.JSONDecodeError:
                 raise errors.PluginError("no JSON in API response")
             if result["result"] == "success":
@@ -96,9 +96,9 @@ class _APIDomain:
         """
         url = self.baseUrl + url
         logger.debug("POST %s", url)
-        with self.session.post(url, data=payload) as r:
+        with self.session.post(url, data=payload) as req:
             try:
-                result = r.json()
+                result = req.json()
             except json.decoder.JSONDecodeError:
                 raise errors.PluginError("no JSON in API response")
             if result["result"] == "success":
@@ -116,9 +116,9 @@ class _APIDomain:
         """
         url = self.baseUrl + url
         logger.debug("DELETE %s", url)
-        with self.session.delete(url) as r:
+        with self.session.delete(url) as req:
             try:
-                result = r.json()
+                result = req.json()
             except json.decoder.JSONDecodeError:
                 raise errors.PluginError("no JSON in API response")
             if result["result"] == "success":
