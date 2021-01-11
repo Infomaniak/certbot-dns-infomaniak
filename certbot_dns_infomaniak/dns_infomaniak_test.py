@@ -4,6 +4,7 @@ import unittest
 
 import mock
 import logging
+import os
 import requests_mock
 
 from certbot.errors import PluginError
@@ -26,6 +27,8 @@ class AuthenticatorTest(
         from certbot_dns_infomaniak.dns_infomaniak import Authenticator
 
         self.config = mock.MagicMock()
+
+        os.environ["INFOMANIAK_API_TOKEN"] = FAKE_TOKEN
 
         self.auth = Authenticator(self.config, "infomaniak")
 
