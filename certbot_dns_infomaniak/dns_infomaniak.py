@@ -174,10 +174,12 @@ class _APIDomain:
         :param str target: value of record
         :param int ttl: optional ttl of record to create
         """
-        logger.debug("add_txt_record {domain} {source} {target}".format(domain=domain, source=source, target=target))
+        logger.debug("add_txt_record {domain} {source} {target}".format(
+            domain=domain, source=source, target=target))
 
         (domain_id, domain_name) = self.find_zone(domain)
-        logger.debug("{domain_id} / {domain_name}".format(domain_id=domain_id, domain_name=domain_name))
+        logger.debug("{domain_id} / {domain_name}".format(
+              domain_id=domain_id, domain_name=domain_name))
 
         source = source[: source.rfind("." + domain_name)]
 
@@ -198,7 +200,8 @@ class _APIDomain:
         :param int ttl: optional ttl of record to create
         """
 
-        logger.debug("del_txt_record {domain} {source} {target}".format(domain=domain, source=source, target=target))
+        logger.debug("del_txt_record {domain} {source} {target}".format(
+            domain=domain, source=source, target=target))
 
         (domain_id, domain_name) = self.find_zone(domain)
 
@@ -211,4 +214,5 @@ class _APIDomain:
             raise errors.PluginError("Several records match")
         record_id = records[0]["id"]
 
-        self.delete_request("/1/domain/{domain_id}/dns/record/{record_id}".format(domain_id=domain_id, record_id=record_id))
+        self.delete_request("/1/domain/{domain_id}/dns/record/{record_id}".format(
+            domain_id=domain_id, record_id=record_id))

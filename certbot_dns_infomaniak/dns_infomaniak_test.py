@@ -164,7 +164,9 @@ class APIDomainTest(unittest.TestCase):
             "DELETE",
         )
         self.client.del_txt_record(
-            DOMAIN, "{name}.{domain}".format(name=self.record_name, domain=DOMAIN), self.record_content, self.record_ttl
+            DOMAIN, "{name}.{domain}".format(name=self.record_name, domain=DOMAIN),
+            self.record_content,
+            self.record_ttl,
         )
 
     def test_del_txt_record_fail_to_find_domain(self):
