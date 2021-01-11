@@ -28,7 +28,8 @@ jobs:
         TWINE_USERNAME: __token__
         TWINE_PASSWORD: ${{ secrets.TWINE_TOKEN }}
       run: |
-        sed -i.bak 's/^version =.*/version = "'${GITHUB_REF##*/}"/' setup.py
+        export VERSION=$(echo ${{ github.ref }} | sed 's@.*/@@')
+        sed -i.bak 's/^version =.*/version = "'$VERSION"/' setup.py
         python setup.py sdist bdist_wheel
         twine upload dist/*
 
