@@ -2,7 +2,6 @@
 import json
 import logging
 import os
-import sys
 
 import requests
 import zope.interface
@@ -39,13 +38,13 @@ class Authenticator(dns_common.DNSAuthenticator):
         try:
             self._api_client().add_txt_record(domain, validation_name, validation)
         except ValueError as err:
-            raise errors.PluginError(f"Cannot add txt record: {err}")
+            raise errors.PluginError("Cannot add txt record: {err}".format(err=err))
 
     def _cleanup(self, domain, validation_name, validation):
         try:
             self._api_client().del_txt_record(domain, validation_name, validation)
         except ValueError as err:
-            raise errors.PluginError(f"Cannot del txt record: {err}")
+            raise errors.PluginError("Cannot del txt record: {err}".format(err=err))
 
     def _api_client(self):
         return _APIDomain(self.token)
@@ -62,7 +61,7 @@ class _APIDomain:
         """
         self.token = token
         self.session = requests.Session()
-        self.session.headers.update({"Authorization": f"Bearer {self.token}"})
+        self.session.headers.update({"Authorization": "Bearer {token}".format(token=self.token)})
 
     def get_request(self, url, payload=None):
         """Performs a GET request against API
@@ -70,8 +69,8 @@ class _APIDomain:
         :param str url: relative url
         :param dict payload : body of request
         """
-        url = f"{self.baseUrl}{url}"
-        logger.debug(f"GET {url}")
+        url = self.baseUrl + url
+        logger.debug("GET {url}".format(url=url))
         with self.session.get(url, params=payload) as r:
             try:
                 result = r.json()
@@ -93,8 +92,8 @@ class _APIDomain:
         :param str url: relative url
         :param dict payload : body of request
         """
-        url = f"{self.baseUrl}{url}"
-        logger.debug(f"POST {url}")
+        url = self.baseUrl + url
+        logger.debug("POST {url}".format(url=url))
         with self.session.post(url, data=payload) as r:
             try:
                 result = r.json()
@@ -113,8 +112,8 @@ class _APIDomain:
 
         :param str url: relative url
         """
-        url = f"{self.baseUrl}{url}"
-        logger.debug(f"DELETE {url}")
+        url = self.baseUrl + url
+        logger.debug("DELETE {url}".format(url=url))
         with self.session.delete(url) as r:
             try:
                 result = r.json()
@@ -140,27 +139,29 @@ class _APIDomain:
         if source == ".":
             fqdn = domain
         else:
-            fqdn = f"{source}.{domain}"
+            fqdn = "{source}.{domain}".format(source=source, domain=domain)
         return list(
             filter(
-                lambda x: x["source_idn"] == fqdn
-                and x["type"] == rtype
-                and x["target"] == target,
-                self.get_request(f"/1/domain/{domain_id}/dns/record"),
+                lambda x: (
+                    x["source_idn"] == fqdn
+                    and x["type"] == rtype
+                    and x["target"] == target
+                ),
+                self.get_request("/1/domain/{domain_id}/dns/record".format(domain_id=domain_id)),
             )
         )
 
     def find_zone(self, domain):
         while "." in domain:
             result = self.get_request(
-                f"/1/product?service_name=domain&customer_name={domain}",
+                "/1/product?service_name=domain&customer_name={domain}".format(domain=domain),
             )
             if len(result) == 1:
                 return (
                     result[0]["id"],
                     domain,
                 )
-            domain = domain[domain.find(".") + 1 :]
+            domain = domain[domain.find(".") + 1:]
         raise errors.PluginError("Domain not found")
 
     def add_txt_record(self, domain, source, target, ttl=300):
@@ -171,17 +172,21 @@ class _APIDomain:
         :param str target: value of record
         :param int ttl: optional ttl of record to create
         """
-        logger.debug(f"add_txt_record {domain} {source} {target}")
+        logger.debug("add_txt_record {domain} {source} {target}".format(domain=domain, source=source, target=target))
 
         (domain_id, domain_name) = self.find_zone(domain)
-        logger.debug(f"{domain_id} / {domain_name}")
+        logger.debug("{domain_id} / {domain_name}".format(domain_id=domain_id, domain_name=domain_name))
 
         source = source[: source.rfind("." + domain_name)]
 
-        logger.debug(f"add_txt_record {domain_name} {source} {target}")
+        logger.debug("add_txt_record {domain_name} {source} {target}".format(
+            domain_name=domain_name,
+            source=source,
+            target=target),
+        )
 
         data = {"type": "TXT", "source": source, "target": target, "ttl": ttl}
-        self.post_request(f"/1/domain/{domain_id}/dns/record", data)
+        self.post_request("/1/domain/{domain_id}/dns/record".format(domain_id=domain_id), data)
 
     def del_txt_record(self, domain, source, target, ttl=300):
         """Delete a TXT DNS record from a domain
@@ -191,7 +196,7 @@ class _APIDomain:
         :param int ttl: optional ttl of record to create
         """
 
-        logger.debug(f"del_txt_record {domain} {source} {target}")
+        logger.debug("del_txt_record {domain} {source} {target}".format(domain=domain, source=source, target=target))
 
         (domain_id, domain_name) = self.find_zone(domain)
 
@@ -204,4 +209,4 @@ class _APIDomain:
             raise errors.PluginError("Several records match")
         record_id = records[0]["id"]
 
-        self.delete_request(f"/1/domain/{domain_id}/dns/record/{record_id}")
+        self.delete_request("/1/domain/{domain_id}/dns/record/{record_id}".format(domain_id=domain_id, record_id=record_id))

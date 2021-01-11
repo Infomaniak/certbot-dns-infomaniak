@@ -1,0 +1,5 @@
+certbot>=1.0.0
+setuptools
+requests
+mock
+requests-mock

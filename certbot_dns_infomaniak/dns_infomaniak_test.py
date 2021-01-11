@@ -3,12 +3,10 @@
 import unittest
 
 import mock
-import json
 import logging
+import os
 import requests_mock
 
-from certbot import errors
-from certbot.compat import os
 from certbot.errors import PluginError
 from certbot.plugins import dns_test_common
 from certbot.plugins.dns_test_common import DOMAIN
@@ -29,6 +27,8 @@ class AuthenticatorTest(
         from certbot_dns_infomaniak.dns_infomaniak import Authenticator
 
         self.config = mock.MagicMock()
+
+        os.environ["INFOMANIAK_API_TOKEN"] = FAKE_TOKEN
 
         self.auth = Authenticator(self.config, "infomaniak")
 
@@ -87,7 +87,7 @@ class APIDomainTest(unittest.TestCase):
 
     def test_add_txt_record(self):
         self._register_response(
-            f"/1/product?service_name=domain&customer_name={DOMAIN}",
+            "/1/product?service_name=domain&customer_name={domain}".format(domain=DOMAIN),
             data=[
                 {
                     "id": 654321,
@@ -105,28 +105,28 @@ class APIDomainTest(unittest.TestCase):
 
     def test_add_txt_record_fail_to_find_domain(self):
         self._register_response(
-            f"/1/product?service_name=domain&customer_name={DOMAIN}",
+            "/1/product?service_name=domain&customer_name={domain}".format(domain=DOMAIN),
             data=[],
         )
-        with self.assertRaises(errors.PluginError) as context:
+        with self.assertRaises(PluginError):
             self.client.add_txt_record(
                 DOMAIN, self.record_name, self.record_content, self.record_ttl
             )
 
     def test_add_txt_record_fail_to_authenticate(self):
         self._register_error(
-            f"/1/product?service_name=domain&customer_name={DOMAIN}",
+            "/1/product?service_name=domain&customer_name={domain}".format(domain=DOMAIN),
             "not_authorized",
             "Authorization required",
         )
-        with self.assertRaises(errors.PluginError) as context:
+        with self.assertRaises(PluginError):
             self.client.add_txt_record(
                 DOMAIN, self.record_name, self.record_content, self.record_ttl
             )
 
     def test_del_txt_record(self):
         self._register_response(
-            f"/1/product?service_name=domain&customer_name={DOMAIN}",
+            "/1/product?service_name=domain&customer_name={domain}".format(domain=DOMAIN),
             data=[
                 {
                     "id": "654321",
@@ -151,7 +151,7 @@ class APIDomainTest(unittest.TestCase):
                 {
                     "id": "11111",
                     "source": self.record_name,
-                    "source_idn": f"{self.record_name}.{DOMAIN}",
+                    "source_idn": "{name}.{domain}".format(name=self.record_name, domain=DOMAIN),
                     "type": "TXT",
                     "ttl": self.record_ttl,
                     "target": self.record_content,
@@ -164,26 +164,26 @@ class APIDomainTest(unittest.TestCase):
             "DELETE",
         )
         self.client.del_txt_record(
-            DOMAIN, f"{self.record_name}.{DOMAIN}", self.record_content, self.record_ttl
+            DOMAIN, "{name}.{domain}".format(name=self.record_name, domain=DOMAIN), self.record_content, self.record_ttl
         )
 
     def test_del_txt_record_fail_to_find_domain(self):
         self._register_response(
-            f"/1/product?service_name=domain&customer_name={DOMAIN}",
+            "/1/product?service_name=domain&customer_name={domain}".format(domain=DOMAIN),
             data=[],
         )
-        with self.assertRaises(errors.PluginError) as context:
+        with self.assertRaises(PluginError):
             self.client.del_txt_record(
                 DOMAIN, self.record_name, self.record_content, self.record_ttl
             )
 
     def test_del_txt_record_fail_to_authenticate(self):
         self._register_error(
-            f"/1/product?service_name=domain&customer_name={DOMAIN}",
+            "/1/product?service_name=domain&customer_name={domain}".format(domain=DOMAIN),
             "not_authorized",
             "Authorization required",
         )
-        with self.assertRaises(errors.PluginError) as context:
+        with self.assertRaises(PluginError):
             self.client.del_txt_record(
                 DOMAIN, self.record_name, self.record_content, self.record_ttl
             )
