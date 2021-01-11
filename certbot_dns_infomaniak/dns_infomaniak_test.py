@@ -2,15 +2,18 @@
 
 import unittest
 
-import mock
 import logging
-import os
+import mock
 import requests_mock
 
 from certbot.errors import PluginError
+import certbot.compat.os as os
 from certbot.plugins import dns_test_common
 from certbot.plugins.dns_test_common import DOMAIN
 from certbot.tests import util as test_util
+
+from certbot_dns_infomaniak.dns_infomaniak import Authenticator
+from certbot_dns_infomaniak.dns_infomaniak import _APIDomain
 
 logger = logging.getLogger(__name__)
 

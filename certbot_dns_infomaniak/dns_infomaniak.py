@@ -1,7 +1,6 @@
 """DNS Authenticator for Infomaniak"""
 import json
 import logging
-import os
 
 import requests
 import zope.interface
@@ -9,6 +8,7 @@ import zope.interface
 from certbot import errors
 from certbot import interfaces
 from certbot.plugins import dns_common
+import certbot.compat.os as os
 
 logger = logging.getLogger(__name__)
 
