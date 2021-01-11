@@ -72,7 +72,7 @@ class _APIDomain:
         :param dict payload : body of request
         """
         url = self.baseUrl + url
-        logger.debug("GET {url}".format(url=url))
+        logger.debug("GET %s", url)
         with self.session.get(url, params=payload) as r:
             try:
                 result = r.json()
@@ -95,7 +95,7 @@ class _APIDomain:
         :param dict payload : body of request
         """
         url = self.baseUrl + url
-        logger.debug("POST {url}".format(url=url))
+        logger.debug("POST %s", url)
         with self.session.post(url, data=payload) as r:
             try:
                 result = r.json()
@@ -115,7 +115,7 @@ class _APIDomain:
         :param str url: relative url
         """
         url = self.baseUrl + url
-        logger.debug("DELETE {url}".format(url=url))
+        logger.debug("DELETE %s", url)
         with self.session.delete(url) as r:
             try:
                 result = r.json()
@@ -174,20 +174,14 @@ class _APIDomain:
         :param str target: value of record
         :param int ttl: optional ttl of record to create
         """
-        logger.debug("add_txt_record {domain} {source} {target}".format(
-            domain=domain, source=source, target=target))
+        logger.debug("add_txt_record %s %s %s", domain, source, target)
 
         (domain_id, domain_name) = self.find_zone(domain)
-        logger.debug("{domain_id} / {domain_name}".format(
-              domain_id=domain_id, domain_name=domain_name))
+        logger.debug("%s / %s", domain_id, domain_name)
 
         source = source[: source.rfind("." + domain_name)]
 
-        logger.debug("add_txt_record {domain_name} {source} {target}".format(
-            domain_name=domain_name,
-            source=source,
-            target=target),
-        )
+        logger.debug("add_txt_record %s %s %s", domain_name, source, target)
 
         data = {"type": "TXT", "source": source, "target": target, "ttl": ttl}
         self.post_request("/1/domain/{domain_id}/dns/record".format(domain_id=domain_id), data)
@@ -200,8 +194,7 @@ class _APIDomain:
         :param int ttl: optional ttl of record to create
         """
 
-        logger.debug("del_txt_record {domain} {source} {target}".format(
-            domain=domain, source=source, target=target))
+        logger.debug("del_txt_record %s %s %s", domain, source, target)
 
         (domain_id, domain_name) = self.find_zone(domain)
 
