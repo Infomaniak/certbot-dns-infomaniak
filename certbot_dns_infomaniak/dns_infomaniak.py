@@ -179,7 +179,11 @@ class _APIDomain:
 
         source = source[: source.rfind("." + domain_name)]
 
-        logger.debug("add_txt_record {domain_name} {source} {target}".format(domain_name=domain_name, source=source, target=target))
+        logger.debug("add_txt_record {domain_name} {source} {target}".format(
+            domain_name=domain_name,
+            source=source,
+            target=target),
+        )
 
         data = {"type": "TXT", "source": source, "target": target, "ttl": ttl}
         self.post_request("/1/domain/{domain_id}/dns/record".format(domain_id=domain_id), data)
