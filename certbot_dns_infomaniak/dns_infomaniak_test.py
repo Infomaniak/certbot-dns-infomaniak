@@ -2,15 +2,18 @@
 
 import unittest
 
-import mock
 import logging
-import os
+import mock
 import requests_mock
 
 from certbot.errors import PluginError
+import certbot.compat.os as os
 from certbot.plugins import dns_test_common
 from certbot.plugins.dns_test_common import DOMAIN
 from certbot.tests import util as test_util
+
+from certbot_dns_infomaniak.dns_infomaniak import Authenticator
+from certbot_dns_infomaniak.dns_infomaniak import _APIDomain
 
 logger = logging.getLogger(__name__)
 
@@ -21,10 +24,9 @@ FAKE_TOKEN = "xxxx"
 class AuthenticatorTest(
     test_util.TempDirTestCase, dns_test_common.BaseAuthenticatorTest
 ):
+    """Class to test the Authenticator class"""
     def setUp(self):
-        super(AuthenticatorTest, self).setUp()
-
-        from certbot_dns_infomaniak.dns_infomaniak import Authenticator
+        super().setUp()
 
         self.config = mock.MagicMock()
 
@@ -37,6 +39,7 @@ class AuthenticatorTest(
         self.auth._api_client = mock.MagicMock(return_value=self.mock_client)
 
     def test_perform(self):
+        """Tests the perform function to see if client method is called"""
         self.auth.perform([self.achall])
 
         expected = [
@@ -45,6 +48,7 @@ class AuthenticatorTest(
         self.assertEqual(expected, self.mock_client.mock_calls)
 
     def test_cleanup(self):
+        """Tests mthe cleanup method to see if client method is called"""
         # _attempt_cleanup | pylint: disable=protected-access
         self.auth._attempt_cleanup = True
         self.auth.cleanup([self.achall])
@@ -56,13 +60,12 @@ class AuthenticatorTest(
 
 
 class APIDomainTest(unittest.TestCase):
+    """Class to test the _APIDomain class"""
     record_name = "foo"
     record_content = "bar"
     record_ttl = 42
 
     def setUp(self):
-        from certbot_dns_infomaniak.dns_infomaniak import _APIDomain
-
         self.adapter = requests_mock.Adapter()
 
         self.client = _APIDomain(FAKE_TOKEN)
@@ -70,6 +73,12 @@ class APIDomainTest(unittest.TestCase):
         self.client.session.mount("mock", self.adapter)
 
     def _register_response(self, url, data=None, method=requests_mock.ANY):
+        """Registers a reply in the requests mock
+
+        :param str url: url to register response
+        :param dict data: data to return
+        :param str method: method for which response is registered (default to all)
+        """
         resp = {"result": "success", "data": data}
         self.adapter.register_uri(
             method,
@@ -78,6 +87,12 @@ class APIDomainTest(unittest.TestCase):
         )
 
     def _register_error(self, url, code, description):
+        """Registers an error reply in the requests mock
+
+        :param str url: url to register response
+        :param int code: error code
+        :param str description: error description
+        """
         resp = {"result": "error", "error": {"code": code, "description": description}}
         self.adapter.register_uri(
             requests_mock.ANY,
@@ -86,6 +101,7 @@ class APIDomainTest(unittest.TestCase):
         )
 
     def test_add_txt_record(self):
+        """add_txt_record with normal params should succeed"""
         self._register_response(
             "/1/product?service_name=domain&customer_name={domain}".format(domain=DOMAIN),
             data=[
@@ -104,6 +120,7 @@ class APIDomainTest(unittest.TestCase):
         )
 
     def test_add_txt_record_fail_to_find_domain(self):
+        """add_txt_record with non existing domain should fail"""
         self._register_response(
             "/1/product?service_name=domain&customer_name={domain}".format(domain=DOMAIN),
             data=[],
@@ -114,6 +131,7 @@ class APIDomainTest(unittest.TestCase):
             )
 
     def test_add_txt_record_fail_to_authenticate(self):
+        """add_txt_record with wrong token should fail"""
         self._register_error(
             "/1/product?service_name=domain&customer_name={domain}".format(domain=DOMAIN),
             "not_authorized",
@@ -125,6 +143,7 @@ class APIDomainTest(unittest.TestCase):
             )
 
     def test_del_txt_record(self):
+        """del_txt_record with normal params should succeed"""
         self._register_response(
             "/1/product?service_name=domain&customer_name={domain}".format(domain=DOMAIN),
             data=[
@@ -164,20 +183,23 @@ class APIDomainTest(unittest.TestCase):
             "DELETE",
         )
         self.client.del_txt_record(
-            DOMAIN, "{name}.{domain}".format(name=self.record_name, domain=DOMAIN), self.record_content, self.record_ttl
+            DOMAIN, "{name}.{domain}".format(name=self.record_name, domain=DOMAIN),
+            self.record_content,
         )
 
     def test_del_txt_record_fail_to_find_domain(self):
+        """del_txt_record with non existing domain should fail"""
         self._register_response(
             "/1/product?service_name=domain&customer_name={domain}".format(domain=DOMAIN),
             data=[],
         )
         with self.assertRaises(PluginError):
             self.client.del_txt_record(
-                DOMAIN, self.record_name, self.record_content, self.record_ttl
+                DOMAIN, self.record_name, self.record_content
             )
 
     def test_del_txt_record_fail_to_authenticate(self):
+        """del_txt_recod with wrong token should fail"""
         self._register_error(
             "/1/product?service_name=domain&customer_name={domain}".format(domain=DOMAIN),
             "not_authorized",
@@ -185,7 +207,7 @@ class APIDomainTest(unittest.TestCase):
         )
         with self.assertRaises(PluginError):
             self.client.del_txt_record(
-                DOMAIN, self.record_name, self.record_content, self.record_ttl
+                DOMAIN, self.record_name, self.record_content
             )
 
 

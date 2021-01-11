@@ -1,7 +1,6 @@
 """DNS Authenticator for Infomaniak"""
 import json
 import logging
-import os
 
 import requests
 import zope.interface
@@ -9,6 +8,7 @@ import zope.interface
 from certbot import errors
 from certbot import interfaces
 from certbot.plugins import dns_common
+import certbot.compat.os as os
 
 logger = logging.getLogger(__name__)
 
@@ -23,7 +23,9 @@ class Authenticator(dns_common.DNSAuthenticator):
     description = "Automates dns-01 challenges using Infomaniak API"
 
     def __init__(self, *args, **kwargs):
-        super(Authenticator, self).__init__(*args, **kwargs)
+        # super(Authenticator, self).__init__(*args, **kwargs)
+        super().__init__(*args, **kwargs)
+        self.token = ""
 
     def more_info(self):  # pylint: disable=missing-docstring,no-self-use
         return self.description
@@ -63,19 +65,19 @@ class _APIDomain:
         self.session = requests.Session()
         self.session.headers.update({"Authorization": "Bearer {token}".format(token=self.token)})
 
-    def get_request(self, url, payload=None):
+    def _get_request(self, url, payload=None):
         """Performs a GET request against API
 
         :param str url: relative url
         :param dict payload : body of request
         """
         url = self.baseUrl + url
-        logger.debug("GET {url}".format(url=url))
-        with self.session.get(url, params=payload) as r:
+        logger.debug("GET %s", url)
+        with self.session.get(url, params=payload) as req:
             try:
-                result = r.json()
-            except json.decoder.JSONDecodeError:
-                raise errors.PluginError("no JSON in API response")
+                result = req.json()
+            except json.decoder.JSONDecodeError as exc:
+                raise errors.PluginError("no JSON in API response") from exc
             if result["result"] == "success":
                 return result["data"]
             if result["error"]["code"] == "not_authorized":
@@ -86,19 +88,19 @@ class _APIDomain:
                 )
             )
 
-    def post_request(self, url, payload):
+    def _post_request(self, url, payload):
         """Performs a POST request
 
         :param str url: relative url
         :param dict payload : body of request
         """
         url = self.baseUrl + url
-        logger.debug("POST {url}".format(url=url))
-        with self.session.post(url, data=payload) as r:
+        logger.debug("POST %s", url)
+        with self.session.post(url, data=payload) as req:
             try:
-                result = r.json()
-            except json.decoder.JSONDecodeError:
-                raise errors.PluginError("no JSON in API response")
+                result = req.json()
+            except json.decoder.JSONDecodeError as exc:
+                raise errors.PluginError("no JSON in API response") from exc
             if result["result"] == "success":
                 return result["data"]
             raise errors.PluginError(
@@ -107,18 +109,18 @@ class _APIDomain:
                 )
             )
 
-    def delete_request(self, url):
+    def _delete_request(self, url):
         """Performs a POST request
 
         :param str url: relative url
         """
         url = self.baseUrl + url
-        logger.debug("DELETE {url}".format(url=url))
-        with self.session.delete(url) as r:
+        logger.debug("DELETE %s", url)
+        with self.session.delete(url) as req:
             try:
-                result = r.json()
-            except json.decoder.JSONDecodeError:
-                raise errors.PluginError("no JSON in API response")
+                result = req.json()
+            except json.decoder.JSONDecodeError as exc:
+                raise errors.PluginError("no JSON in API response") from exc
             if result["result"] == "success":
                 return result["data"]
             raise errors.PluginError(
@@ -127,33 +129,44 @@ class _APIDomain:
                 )
             )
 
-    def get_records(self, domain, domain_id, rtype, source, target):
+    def _get_records(self, domain, domain_id, record):
         """Find record matching arguments
 
         :param str domain: domain name
         :param int domain_id: domain id
-        :param str rtype: type of record (A, TXT, ...)
-        :param str source: record key in zone
-        :param str target: value of record to match
+        :param dict record: dict describing records- keys are type, source and target
+
+        :returns: records list
+        :rtype: list
         """
-        if source == ".":
+        for needed in ["type", "source", "target"]:
+            if needed not in record:
+                raise ValueError("{} not provided in record dict".format(needed))
+
+        if record["source"] == ".":
             fqdn = domain
         else:
-            fqdn = "{source}.{domain}".format(source=source, domain=domain)
+            fqdn = "{source}.{domain}".format(source=record["source"], domain=domain)
         return list(
             filter(
                 lambda x: (
                     x["source_idn"] == fqdn
-                    and x["type"] == rtype
-                    and x["target"] == target
+                    and x["type"] == record["type"]
+                    and x["target"] == record["target"]
                 ),
-                self.get_request("/1/domain/{domain_id}/dns/record".format(domain_id=domain_id)),
+                self._get_request("/1/domain/{domain_id}/dns/record".format(domain_id=domain_id)),
             )
         )
 
-    def find_zone(self, domain):
+    def _find_zone(self, domain):
+        """Finds the corresponding DNS zone through the API
+
+        :param str domain: domain name
+
+        :returns: id and zone name
+        """
         while "." in domain:
-            result = self.get_request(
+            result = self._get_request(
                 "/1/product?service_name=domain&customer_name={domain}".format(domain=domain),
             )
             if len(result) == 1:
@@ -172,41 +185,40 @@ class _APIDomain:
         :param str target: value of record
         :param int ttl: optional ttl of record to create
         """
-        logger.debug("add_txt_record {domain} {source} {target}".format(domain=domain, source=source, target=target))
+        logger.debug("add_txt_record %s %s %s", domain, source, target)
 
-        (domain_id, domain_name) = self.find_zone(domain)
-        logger.debug("{domain_id} / {domain_name}".format(domain_id=domain_id, domain_name=domain_name))
+        (domain_id, domain_name) = self._find_zone(domain)
+        logger.debug("%s / %s", domain_id, domain_name)
 
         source = source[: source.rfind("." + domain_name)]
 
-        logger.debug("add_txt_record {domain_name} {source} {target}".format(
-            domain_name=domain_name,
-            source=source,
-            target=target),
-        )
+        logger.debug("add_txt_record %s %s %s", domain_name, source, target)
 
         data = {"type": "TXT", "source": source, "target": target, "ttl": ttl}
-        self.post_request("/1/domain/{domain_id}/dns/record".format(domain_id=domain_id), data)
+        self._post_request("/1/domain/{domain_id}/dns/record".format(domain_id=domain_id), data)
 
-    def del_txt_record(self, domain, source, target, ttl=300):
+    def del_txt_record(self, domain, source, target):
         """Delete a TXT DNS record from a domain
 
         :param str source: record key in zone (left prefix before domain)
         :param str target: value of record
-        :param int ttl: optional ttl of record to create
         """
 
-        logger.debug("del_txt_record {domain} {source} {target}".format(domain=domain, source=source, target=target))
+        logger.debug("del_txt_record %s %s %s", domain, source, target)
 
-        (domain_id, domain_name) = self.find_zone(domain)
+        (domain_id, domain_name) = self._find_zone(domain)
 
         source = source[: source.rfind("." + domain_name)]
 
-        records = self.get_records(domain_name, domain_id, "TXT", source, target)
+        records = self._get_records(
+            domain_name, domain_id,
+            {"type": "TXT", "source": source, "target": target},
+        )
         if records is None:
             raise errors.PluginError("Record not found")
-        elif len(records) > 1:
+        if len(records) > 1:
             raise errors.PluginError("Several records match")
         record_id = records[0]["id"]
 
-        self.delete_request("/1/domain/{domain_id}/dns/record/{record_id}".format(domain_id=domain_id, record_id=record_id))
+        self._delete_request("/1/domain/{domain_id}/dns/record/{record_id}".format(
+            domain_id=domain_id, record_id=record_id))
