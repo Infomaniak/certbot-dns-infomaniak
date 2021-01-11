@@ -2,10 +2,10 @@ from setuptools import setup
 from setuptools import find_packages
 from os import path
 
-version = "0.1.5"
+version = "0.0.0"
 
 install_requires = [
-    "certbot>=1.0.0",
+    "certbot>=0.34.0",
     "setuptools",
     "requests",
     "mock",
