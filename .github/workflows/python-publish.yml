@@ -23,32 +23,31 @@ jobs:
       run: |
         python -m pip install --upgrade pip
         pip install setuptools wheel twine
+    - name: Extract tag name
+      id: tag
+      uses: actions/github-script@0.2.0
+      with:
+        github-token: ${{ secrets.GITHUB_TOKEN }}
+        script: |
+          return context.payload.ref.replace(/\/refs\/tags\//, '');
     - name: Build and publish
       env:
         TWINE_USERNAME: __token__
         TWINE_PASSWORD: ${{ secrets.TWINE_TOKEN }}
       run: |
-        export VERSION=$(echo ${{ github.ref }} | sed 's@.*/@@')
-        sed -i.bak "s/^version =.*/version = \"$VERSION\"/" setup.py
+        sed -i.bak 's/^version =.*/version = "${{ steps.tag.outputs.result }}"/' setup.py
         python setup.py sdist bdist_wheel
         twine upload dist/*
 
-  release:
-    name: Create Release
-    needs: build
-    runs-on: ubuntu-latest
-    steps:
-      - name: Checkout code
-        uses: actions/checkout@v2
-      - name: Create Release
-        id: create_release
-        uses: actions/create-release@v1
-        env:
-          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }} # This token is provided by Actions, you do not need to create your own token
-        with:
-          tag_name: ${{ github.ref }}
-          release_name: ${{ github.ref }}
-          body: |
-            Release created, package download: https://pypi.org/project/certbot-dns-infomaniak/${{ github.ref }}/
-          draft: false
-          prerelease: false
+    - name: Create Release
+      id: create_release
+      uses: actions/create-release@v1
+      env:
+        GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }} # This token is provided by Actions, you do not need to create your own token
+      with:
+        tag_name: ${{ github.ref }}
+        release_name: ${{ github.ref }}
+        body: |
+          Release created, package download: https://pypi.org/project/certbot-dns-infomaniak/${{ steps.tag.outputs.result }}/
+        draft: false
+        prerelease: false
