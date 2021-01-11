@@ -22,7 +22,7 @@ class AuthenticatorTest(
     test_util.TempDirTestCase, dns_test_common.BaseAuthenticatorTest
 ):
     def setUp(self):
-        super(AuthenticatorTest, self).setUp()
+        super().setUp()
 
         from certbot_dns_infomaniak.dns_infomaniak import Authenticator
 

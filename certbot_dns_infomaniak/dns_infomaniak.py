@@ -23,7 +23,9 @@ class Authenticator(dns_common.DNSAuthenticator):
     description = "Automates dns-01 challenges using Infomaniak API"
 
     def __init__(self, *args, **kwargs):
-        super(Authenticator, self).__init__(*args, **kwargs)
+        # super(Authenticator, self).__init__(*args, **kwargs)
+        super().__init__(*args, **kwargs)
+        self.token = ""
 
     def more_info(self):  # pylint: disable=missing-docstring,no-self-use
         return self.description
