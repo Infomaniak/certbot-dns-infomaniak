@@ -166,7 +166,6 @@ class APIDomainTest(unittest.TestCase):
         self.client.del_txt_record(
             DOMAIN, "{name}.{domain}".format(name=self.record_name, domain=DOMAIN),
             self.record_content,
-            self.record_ttl,
         )
 
     def test_del_txt_record_fail_to_find_domain(self):
@@ -176,7 +175,7 @@ class APIDomainTest(unittest.TestCase):
         )
         with self.assertRaises(PluginError):
             self.client.del_txt_record(
-                DOMAIN, self.record_name, self.record_content, self.record_ttl
+                DOMAIN, self.record_name, self.record_content
             )
 
     def test_del_txt_record_fail_to_authenticate(self):
@@ -187,7 +186,7 @@ class APIDomainTest(unittest.TestCase):
         )
         with self.assertRaises(PluginError):
             self.client.del_txt_record(
-                DOMAIN, self.record_name, self.record_content, self.record_ttl
+                DOMAIN, self.record_name, self.record_content
             )
 
 

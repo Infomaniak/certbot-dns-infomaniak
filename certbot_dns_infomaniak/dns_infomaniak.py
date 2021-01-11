@@ -186,12 +186,11 @@ class _APIDomain:
         data = {"type": "TXT", "source": source, "target": target, "ttl": ttl}
         self.post_request("/1/domain/{domain_id}/dns/record".format(domain_id=domain_id), data)
 
-    def del_txt_record(self, domain, source, target, ttl=300):
+    def del_txt_record(self, domain, source, target):
         """Delete a TXT DNS record from a domain
 
         :param str source: record key in zone (left prefix before domain)
         :param str target: value of record
-        :param int ttl: optional ttl of record to create
         """
 
         logger.debug("del_txt_record %s %s %s", domain, source, target)
