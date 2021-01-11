@@ -76,8 +76,8 @@ class _APIDomain:
         with self.session.get(url, params=payload) as req:
             try:
                 result = req.json()
-            except json.decoder.JSONDecodeError:
-                raise errors.PluginError("no JSON in API response")
+            except json.decoder.JSONDecodeError as exc:
+                raise errors.PluginError("no JSON in API response") from exc
             if result["result"] == "success":
                 return result["data"]
             if result["error"]["code"] == "not_authorized":
@@ -99,8 +99,8 @@ class _APIDomain:
         with self.session.post(url, data=payload) as req:
             try:
                 result = req.json()
-            except json.decoder.JSONDecodeError:
-                raise errors.PluginError("no JSON in API response")
+            except json.decoder.JSONDecodeError as exc:
+                raise errors.PluginError("no JSON in API response") from exc
             if result["result"] == "success":
                 return result["data"]
             raise errors.PluginError(
@@ -119,8 +119,8 @@ class _APIDomain:
         with self.session.delete(url) as req:
             try:
                 result = req.json()
-            except json.decoder.JSONDecodeError:
-                raise errors.PluginError("no JSON in API response")
+            except json.decoder.JSONDecodeError as exc:
+                raise errors.PluginError("no JSON in API response") from exc
             if result["result"] == "success":
                 return result["data"]
             raise errors.PluginError(
