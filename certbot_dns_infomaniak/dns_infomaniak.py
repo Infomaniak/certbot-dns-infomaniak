@@ -129,31 +129,42 @@ class _APIDomain:
                 )
             )
 
-    def get_records(self, domain, domain_id, rtype, source, target):
+    def get_records(self, domain, domain_id, record):
         """Find record matching arguments
 
         :param str domain: domain name
         :param int domain_id: domain id
-        :param str rtype: type of record (A, TXT, ...)
-        :param str source: record key in zone
-        :param str target: value of record to match
+        :param dict record: dict describing records- keys are type, source and target
+
+        :returns: records list
+        :rtype: list
         """
-        if source == ".":
+        for needed in ["type", "source", "target"]:
+            if needed not in record:
+                raise ValueError("{} not provided in record dict".format(needed))
+
+        if record["source"] == ".":
             fqdn = domain
         else:
-            fqdn = "{source}.{domain}".format(source=source, domain=domain)
+            fqdn = "{source}.{domain}".format(source=record["source"], domain=domain)
         return list(
             filter(
                 lambda x: (
                     x["source_idn"] == fqdn
-                    and x["type"] == rtype
-                    and x["target"] == target
+                    and x["type"] == record["type"]
+                    and x["target"] == record["target"]
                 ),
                 self.get_request("/1/domain/{domain_id}/dns/record".format(domain_id=domain_id)),
             )
         )
 
     def find_zone(self, domain):
+        """Finds the corresponding DNS zone through the API
+
+        :param str domain: domain name
+
+        :returns: id and zone name
+        """
         while "." in domain:
             result = self.get_request(
                 "/1/product?service_name=domain&customer_name={domain}".format(domain=domain),
@@ -199,10 +210,11 @@ class _APIDomain:
 
         source = source[: source.rfind("." + domain_name)]
 
-        records = self.get_records(domain_name, domain_id, "TXT", source, target)
+        records = self.get_records(domain_name, domain_id,
+                                   {"type": "TXT", "source": source, "target": target})
         if records is None:
             raise errors.PluginError("Record not found")
-        elif len(records) > 1:
+        if len(records) > 1:
             raise errors.PluginError("Several records match")
         record_id = records[0]["id"]
 
