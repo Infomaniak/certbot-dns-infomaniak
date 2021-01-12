@@ -42,6 +42,18 @@ Usage
      --rsa-key-size 4096 \
      -d 'death.star'
 
+If certbot requires elevated rights, the following command must be used instead:
+
+.. code-block:: bash
+
+   export INFOMANIAK_API_TOKEN=xxx
+   sudo --preserve-env=INFOMANIAK_API_TOKEN certbot certonly \
+     --authenticator certbot-dns-infomaniak:dns-infomaniak \
+     --server https://acme-v02.api.letsencrypt.org/directory \
+     --agree-tos \
+     --rsa-key-size 4096 \
+     -d 'death.star'
+
 Acknowledgments
 ---------------
 
