@@ -66,7 +66,7 @@ need to edit ``/lib/systemd/system/certbot.service``. In there, add the
 following line in ``Service``, with <YOUR_API_TOKEN> replaced with your actual
 token:
 
-.. code-block:: systemd
+::
 
    Environment="INFOMANIAK_API_TOKEN=<YOUR_API_TOKEN>"
 
