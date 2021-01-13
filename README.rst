@@ -37,10 +37,38 @@ Usage
    export INFOMANIAK_API_TOKEN=xxx
    certbot certonly \
      --authenticator certbot-dns-infomaniak:dns-infomaniak \
-     --server https://acme-staging-v02.api.letsencrypt.org/directory \
+     --server https://acme-v02.api.letsencrypt.org/directory \
      --agree-tos \
      --rsa-key-size 4096 \
      -d 'death.star'
+
+If certbot requires elevated rights, the following command must be used instead:
+
+.. code-block:: bash
+
+   export INFOMANIAK_API_TOKEN=xxx
+   sudo --preserve-env=INFOMANIAK_API_TOKEN certbot certonly \
+     --authenticator certbot-dns-infomaniak:dns-infomaniak \
+     --server https://acme-v02.api.letsencrypt.org/directory \
+     --agree-tos \
+     --rsa-key-size 4096 \
+     -d 'death.star'
+
+Automatic renewal
+-----------------
+
+By default, certbot installs a service that periodically renews its
+certificates automatically. In order to do this, the command must know the API
+key, otherwise it will fail silently.
+
+In order to enable automatic renewal for your wildcard certificates, you will
+need to edit ``/lib/systemd/system/certbot.service``. In there, add the
+following line in ``Service``, with <YOUR_API_TOKEN> replaced with your actual
+token:
+
+::
+
+   Environment="INFOMANIAK_API_TOKEN=<YOUR_API_TOKEN>"
 
 Acknowledgments
 ---------------
