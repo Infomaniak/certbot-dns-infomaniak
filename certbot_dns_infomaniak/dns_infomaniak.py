@@ -8,7 +8,10 @@ import zope.interface
 from certbot import errors
 from certbot import interfaces
 from certbot.plugins import dns_common
-import certbot.compat.os as os
+try:
+    import certbot.compat.os as os
+except ImportError:
+    import os
 
 logger = logging.getLogger(__name__)
 

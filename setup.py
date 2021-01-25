@@ -5,7 +5,7 @@ from os import path
 version = "0.0.0"
 
 install_requires = [
-    "certbot>=0.34.0",
+    "certbot>=0.31.0",
     "setuptools",
     "requests",
     "mock",
