@@ -7,7 +7,10 @@ import mock
 import requests_mock
 
 from certbot.errors import PluginError
-import certbot.compat.os as os
+try:
+    import certbot.compat.os as os
+except ImportError:
+    import os
 from certbot.plugins import dns_test_common
 from certbot.plugins.dns_test_common import DOMAIN
 from certbot.tests import util as test_util
