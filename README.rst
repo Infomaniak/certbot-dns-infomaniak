@@ -55,8 +55,15 @@ If certbot requires elevated rights, the following command must be used instead:
 Via INI file
 ^^^^^^^^^^^^
 
+Certbot will emit a warning if it detects that the credentials file can be
+accessed by other users on your system. The warning reads "Unsafe permissions
+on credentials configuration file", followed by the path to the credentials
+file. This warning will be emitted each time Certbot uses the credentials file,
+including for renewal, and cannot be silenced except by addressing the issue
+(e.g., by using a command like ``chmod 600`` to restrict access to the file).
+
 ============================================================= ==============================================
-``--authenticator dns-infomaniak``                            select the authenticator plugin (Required)
+``--authenticator certbot-dns-infomaniak:dns-infomaniak``     select the authenticator plugin (Required)
 
 ``--certbot-dns-infomaniak:dns-infomaniak-credentials``       Infomaniak Token credentials
                                                               INI file. (Required)
@@ -66,7 +73,7 @@ An example ``credentials.ini`` file:
 
 .. code-block:: ini
 
-   dns_infomaniak_token = XXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXX
+   certbot_dns_infomaniak:dns_infomaniak_token = XXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXX
 
 
 To start using DNS authentication for Infomaniak, pass the following arguments on certbot's command line:
@@ -75,7 +82,7 @@ To start using DNS authentication for Infomaniak, pass the following arguments o
 .. code-block:: bash
 
   certbot certonly \
-    --authenticator dns-infomaniak \
+    --authenticator certbot-dns-infomaniak:dns-infomaniak \
     --certbot-dns-infomaniak:dns-infomaniak-credentials <path to file> \
     --server https://acme-v02.api.letsencrypt.org/directory \
     --agree-tos \
