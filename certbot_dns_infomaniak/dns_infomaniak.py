@@ -29,6 +29,14 @@ class Authenticator(dns_common.DNSAuthenticator):
         # super(Authenticator, self).__init__(*args, **kwargs)
         super().__init__(*args, **kwargs)
         self.token = ""
+        self.credentials = None
+
+    @classmethod
+    def add_parser_arguments(cls, add):  # pylint: disable=arguments-differ
+        super(Authenticator, cls).add_parser_arguments(
+            add, default_propagation_seconds=120
+        )
+        add("credentials", help="Infomaniak credentials INI file.")
 
     def more_info(self):  # pylint: disable=missing-docstring,no-self-use
         return self.description
@@ -36,8 +44,18 @@ class Authenticator(dns_common.DNSAuthenticator):
     def _setup_credentials(self):
         token = os.getenv("INFOMANIAK_API_TOKEN")
         if token is None:
-            raise errors.PluginError("INFOMANIAK_API_TOKEN variable not defined")
-        self.token = token
+            self.credentials = self._configure_credentials(
+                "credentials",
+                "Infomaniak credentials INI file",
+                {
+                    "token": "Infomaniak API token.",
+                },
+            )
+            if not self.credentials:
+                raise errors.PluginError("INFOMANIAK API Token not defined")
+            self.token = self.credentials.conf("token")
+        else:
+            self.token = token
 
     def _perform(self, domain, validation_name, validation):
         try:

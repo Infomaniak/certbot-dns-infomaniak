@@ -16,11 +16,6 @@ with "Domain" scope
 
 .. _dashboard: https://manager.infomaniak.com/v3/infomaniak-api
 
-Then, export this token as an environment variable:
-
-::
-
-    export INFOMANIAK_API_TOKEN=xxx
 
 Installation
 ------------
@@ -31,6 +26,9 @@ Installation
 
 Usage
 -----
+
+Via environment variable
+^^^^^^^^^^^^^^^^^^^^^^^^
 
 .. code-block:: bash
 
@@ -53,6 +51,36 @@ If certbot requires elevated rights, the following command must be used instead:
      --agree-tos \
      --rsa-key-size 4096 \
      -d 'death.star'
+
+Via INI file
+^^^^^^^^^^^^
+
+============================================================= ==============================================
+``--authenticator dns-infomaniak``                            select the authenticator plugin (Required)
+
+``--certbot-dns-infomaniak:dns-infomaniak-credentials``       Infomaniak Token credentials
+                                                              INI file. (Required)
+============================================================= ==============================================
+
+An example ``credentials.ini`` file:
+
+.. code-block:: ini
+
+   dns_infomaniak_token = XXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXX
+
+
+To start using DNS authentication for Infomaniak, pass the following arguments on certbot's command line:
+
+
+.. code-block:: bash
+
+  certbot certonly \
+    --authenticator dns-infomaniak \
+    --certbot-dns-infomaniak:dns-infomaniak-credentials <path to file> \
+    --server https://acme-v02.api.letsencrypt.org/directory \
+    --agree-tos \
+    --rsa-key-size 4096 \
+    -d 'death.star'
 
 Automatic renewal
 -----------------
