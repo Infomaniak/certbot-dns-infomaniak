@@ -16,11 +16,6 @@ with "Domain" scope
 
 .. _dashboard: https://manager.infomaniak.com/v3/infomaniak-api
 
-Then, export this token as an environment variable:
-
-::
-
-    export INFOMANIAK_API_TOKEN=xxx
 
 Installation
 ------------
@@ -31,6 +26,9 @@ Installation
 
 Usage
 -----
+
+Via environment variable
+^^^^^^^^^^^^^^^^^^^^^^^^
 
 .. code-block:: bash
 
@@ -53,6 +51,43 @@ If certbot requires elevated rights, the following command must be used instead:
      --agree-tos \
      --rsa-key-size 4096 \
      -d 'death.star'
+
+Via INI file
+^^^^^^^^^^^^
+
+Certbot will emit a warning if it detects that the credentials file can be
+accessed by other users on your system. The warning reads "Unsafe permissions
+on credentials configuration file", followed by the path to the credentials
+file. This warning will be emitted each time Certbot uses the credentials file,
+including for renewal, and cannot be silenced except by addressing the issue
+(e.g., by using a command like ``chmod 600`` to restrict access to the file).
+
+============================================================= ==============================================
+``--authenticator certbot-dns-infomaniak:dns-infomaniak``     select the authenticator plugin (Required)
+
+``--certbot-dns-infomaniak:dns-infomaniak-credentials``       Infomaniak Token credentials
+                                                              INI file. (Required)
+============================================================= ==============================================
+
+An example ``credentials.ini`` file:
+
+.. code-block:: ini
+
+   certbot_dns_infomaniak:dns_infomaniak_token = XXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXX
+
+
+To start using DNS authentication for Infomaniak, pass the following arguments on certbot's command line:
+
+
+.. code-block:: bash
+
+  certbot certonly \
+    --authenticator certbot-dns-infomaniak:dns-infomaniak \
+    --certbot-dns-infomaniak:dns-infomaniak-credentials <path to file> \
+    --server https://acme-v02.api.letsencrypt.org/directory \
+    --agree-tos \
+    --rsa-key-size 4096 \
+    -d 'death.star'
 
 Automatic renewal
 -----------------
