@@ -1,6 +1,7 @@
 """DNS Authenticator for Infomaniak"""
 import json
 import logging
+import idna
 
 import requests
 import zope.interface
@@ -58,14 +59,16 @@ class Authenticator(dns_common.DNSAuthenticator):
             self.token = token
 
     def _perform(self, domain, validation_name, validation):
+        decoded_domain = idna.decode(domain)
         try:
-            self._api_client().add_txt_record(domain, validation_name, validation)
+            self._api_client().add_txt_record(decoded_domain, validation_name, validation)
         except ValueError as err:
             raise errors.PluginError("Cannot add txt record: {err}".format(err=err))
 
     def _cleanup(self, domain, validation_name, validation):
+        decoded_domain = idna.decode(domain)
         try:
-            self._api_client().del_txt_record(domain, validation_name, validation)
+            self._api_client().del_txt_record(decoded_domain, validation_name, validation)
         except ValueError as err:
             raise errors.PluginError("Cannot del txt record: {err}".format(err=err))
 
@@ -207,14 +210,10 @@ class _APIDomain:
         :param int ttl: optional ttl of record to create
         """
         logger.debug("add_txt_record %s %s %s", domain, source, target)
-
         (domain_id, domain_name) = self._find_zone(domain)
         logger.debug("%s / %s", domain_id, domain_name)
-
-        source = source[: source.rfind("." + domain_name)]
-
+        source = source.split(".")[0]
         logger.debug("add_txt_record %s %s %s", domain_name, source, target)
-
         data = {"type": "TXT", "source": source, "target": target, "ttl": ttl}
         self._post_request("/1/domain/{domain_id}/dns/record".format(domain_id=domain_id), data)
 
@@ -224,13 +223,9 @@ class _APIDomain:
         :param str source: record key in zone (left prefix before domain)
         :param str target: value of record
         """
-
         logger.debug("del_txt_record %s %s %s", domain, source, target)
-
         (domain_id, domain_name) = self._find_zone(domain)
-
-        source = source[: source.rfind("." + domain_name)]
-
+        source = source.split(".")[0]
         records = self._get_records(
             domain_name, domain_id,
             {"type": "TXT", "source": source, "target": target},
