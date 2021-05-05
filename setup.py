@@ -10,6 +10,7 @@ install_requires = [
     "requests",
     "mock",
     "requests-mock",
+    "idna",
 ]
 
 # read the contents of your README file

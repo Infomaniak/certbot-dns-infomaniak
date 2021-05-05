@@ -3,3 +3,4 @@ setuptools
 requests
 mock
 requests-mock
+idna
