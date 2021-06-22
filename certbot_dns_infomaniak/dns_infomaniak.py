@@ -212,9 +212,9 @@ class _APIDomain:
         logger.debug("add_txt_record %s %s %s", domain, source, target)
         (domain_id, domain_name) = self._find_zone(domain)
         logger.debug("%s / %s", domain_id, domain_name)
-        source = source.split(".")[0]
-        logger.debug("add_txt_record %s %s %s", domain_name, source, target)
-        data = {"type": "TXT", "source": source, "target": target, "ttl": ttl}
+        relative_source = source.rstrip(domain_name)
+        logger.debug("add_txt_record %s %s %s", domain_name, relative_source, target)
+        data = {"type": "TXT", "source": relative_source, "target": target, "ttl": ttl}
         self._post_request("/1/domain/{domain_id}/dns/record".format(domain_id=domain_id), data)
 
     def del_txt_record(self, domain, source, target):
@@ -225,10 +225,10 @@ class _APIDomain:
         """
         logger.debug("del_txt_record %s %s %s", domain, source, target)
         (domain_id, domain_name) = self._find_zone(domain)
-        source = source.split(".")[0]
+        relative_source = source.rstrip(domain_name)
         records = self._get_records(
             domain_name, domain_id,
-            {"type": "TXT", "source": source, "target": target},
+            {"type": "TXT", "source": relative_source, "target": target},
         )
         if records is None:
             raise errors.PluginError("Record not found")
