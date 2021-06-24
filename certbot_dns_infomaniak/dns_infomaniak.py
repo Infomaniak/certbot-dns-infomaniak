@@ -212,7 +212,10 @@ class _APIDomain:
         logger.debug("add_txt_record %s %s %s", domain, source, target)
         (domain_id, domain_name) = self._find_zone(domain)
         logger.debug("%s / %s", domain_id, domain_name)
-        relative_source = source.rstrip(domain_name)
+        if source.endswith("." + domain_name):
+            relative_source = source[:source.rfind("." + domain_name)]
+        else:
+            relative_source = source
         logger.debug("add_txt_record %s %s %s", domain_name, relative_source, target)
         data = {"type": "TXT", "source": relative_source, "target": target, "ttl": ttl}
         self._post_request("/1/domain/{domain_id}/dns/record".format(domain_id=domain_id), data)
@@ -225,7 +228,10 @@ class _APIDomain:
         """
         logger.debug("del_txt_record %s %s %s", domain, source, target)
         (domain_id, domain_name) = self._find_zone(domain)
-        relative_source = source.rstrip(domain_name)
+        if source.endswith("." + domain_name):
+            relative_source = source[:source.rfind("." + domain_name)]
+        else:
+            relative_source = source
         records = self._get_records(
             domain_name, domain_id,
             {"type": "TXT", "source": relative_source, "target": target},

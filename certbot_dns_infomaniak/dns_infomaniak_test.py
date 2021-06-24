@@ -19,6 +19,7 @@ from certbot_dns_infomaniak.dns_infomaniak import Authenticator
 from certbot_dns_infomaniak.dns_infomaniak import _APIDomain
 
 logger = logging.getLogger(__name__)
+logger.setLevel(logging.DEBUG)
 
 
 FAKE_TOKEN = "xxxx"
