@@ -6,6 +6,9 @@ import logging
 from unittest import mock
 import requests_mock
 
+import sys
+import io
+
 from certbot.errors import PluginError
 try:
     import certbot.compat.os as os
@@ -39,8 +42,21 @@ class AuthenticatorTest(
         self.auth = Authenticator(self.config, "infomaniak")
 
         self.mock_client = mock.MagicMock(default_propagation_seconds=15)
-        # _get_ispconfig_client | pylint: disable=protected-access
+
         self.auth._api_client = mock.MagicMock(return_value=self.mock_client)
+
+        try:
+            from certbot.display.util import notify  # noqa: F401
+            notify_patch = mock.patch('certbot._internal.main.display_util.notify')
+            self.mock_notify = notify_patch.start()
+            self.addCleanup(notify_patch.stop)
+            self.old_stdout = sys.stdout
+            sys.stdout = io.StringIO()
+        except ImportError:
+            self.old_stdout = sys.stdout
+
+    def tearDown(self):
+        sys.stdout = self.old_stdout
 
     def test_perform(self):
         """Tests the perform function to see if client method is called"""
