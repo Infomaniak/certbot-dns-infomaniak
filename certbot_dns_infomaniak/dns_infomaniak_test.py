@@ -53,7 +53,7 @@ class AuthenticatorTest(
             self.old_stdout = sys.stdout
             sys.stdout = io.StringIO()
         except ImportError:
-            pass
+            self.old_stdout = sys.stdout
 
     def tearDown(self):
         sys.stdout = self.old_stdout
