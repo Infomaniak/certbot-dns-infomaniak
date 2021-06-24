@@ -1,6 +1,5 @@
-certbot>=0.31.0
+certbot<1.16.0
 setuptools
 requests
-mock
 requests-mock
 idna
