@@ -3,7 +3,7 @@
 import unittest
 
 import logging
-import mock
+from unittest import mock
 import requests_mock
 
 from certbot.errors import PluginError
