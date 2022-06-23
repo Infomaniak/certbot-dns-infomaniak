@@ -34,7 +34,7 @@ Via environment variable
 
    export INFOMANIAK_API_TOKEN=xxx
    certbot certonly \
-     --authenticator certbot-dns-infomaniak:dns-infomaniak \
+     --authenticator dns-infomaniak \
      --server https://acme-v02.api.letsencrypt.org/directory \
      --agree-tos \
      --rsa-key-size 4096 \
@@ -46,7 +46,7 @@ If certbot requires elevated rights, the following command must be used instead:
 
    export INFOMANIAK_API_TOKEN=xxx
    sudo --preserve-env=INFOMANIAK_API_TOKEN certbot certonly \
-     --authenticator certbot-dns-infomaniak:dns-infomaniak \
+     --authenticator dns-infomaniak \
      --server https://acme-v02.api.letsencrypt.org/directory \
      --agree-tos \
      --rsa-key-size 4096 \
@@ -63,9 +63,9 @@ including for renewal, and cannot be silenced except by addressing the issue
 (e.g., by using a command like ``chmod 600`` to restrict access to the file).
 
 ============================================================= ==============================================
-``--authenticator certbot-dns-infomaniak:dns-infomaniak``     select the authenticator plugin (Required)
+``--authenticator dns-infomaniak``     select the authenticator plugin (Required)
 
-``--certbot-dns-infomaniak:dns-infomaniak-credentials``       Infomaniak Token credentials
+``--dns-infomaniak-credentials``       Infomaniak Token credentials
                                                               INI file. (Required)
 ============================================================= ==============================================
 
@@ -73,7 +73,7 @@ An example ``credentials.ini`` file:
 
 .. code-block:: ini
 
-   certbot_dns_infomaniak:dns_infomaniak_token = XXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXX
+   dns_infomaniak_token = XXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXX
 
 
 To start using DNS authentication for Infomaniak, pass the following arguments on certbot's command line:
@@ -82,8 +82,8 @@ To start using DNS authentication for Infomaniak, pass the following arguments o
 .. code-block:: bash
 
   certbot certonly \
-    --authenticator certbot-dns-infomaniak:dns-infomaniak \
-    --certbot-dns-infomaniak:dns-infomaniak-credentials <path to file> \
+    --authenticator dns-infomaniak \
+    --dns-infomaniak-credentials <path to file> \
     --server https://acme-v02.api.letsencrypt.org/directory \
     --agree-tos \
     --rsa-key-size 4096 \
