@@ -20,7 +20,7 @@ with "Domain" scope
 Installation
 ------------
 
-::
+.. code-block:: bash
 
     pip install certbot-dns-infomaniak
 
@@ -62,12 +62,11 @@ file. This warning will be emitted each time Certbot uses the credentials file,
 including for renewal, and cannot be silenced except by addressing the issue
 (e.g., by using a command like ``chmod 600`` to restrict access to the file).
 
-============================================================= ==============================================
-``--authenticator dns-infomaniak``     select the authenticator plugin (Required)
-
-``--dns-infomaniak-credentials``       Infomaniak Token credentials
-                                                              INI file. (Required)
-============================================================= ==============================================
+===================================  ==========================================
+``--authenticator dns-infomaniak``   select the authenticator plugin (Required)
+``--dns-infomaniak-credentials``     Infomaniak Token credentials
+                                     INI file. (Required)
+===================================  ==========================================
 
 An example ``credentials.ini`` file:
 
@@ -101,7 +100,7 @@ need to edit ``/lib/systemd/system/certbot.service``. In there, add the
 following line in ``Service``, with <YOUR_API_TOKEN> replaced with your actual
 token:
 
-::
+.. code-block:: bash
 
    Environment="INFOMANIAK_API_TOKEN=<YOUR_API_TOKEN>"
 
