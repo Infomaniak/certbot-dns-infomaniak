@@ -12,7 +12,7 @@ Issue a token
 -------------
 
 At your Infomaniak manager dashboard_, to to the API section and generate a token
-with "Domain" scope
+with "certificates" scope
 
 .. _dashboard: https://manager.infomaniak.com/v3/infomaniak-api
 
