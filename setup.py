@@ -1,3 +1,6 @@
+# SPDX-FileCopyrightText: 2021-2022 Rene Luria <rene.luria@infomaniak.com>
+# SPDX-FileCopyrightText: 2021-2022 Yannik Roth <info@fuechslein.ch>
+# SPDX-License-Identifier: Apache-2.0
 from setuptools import setup
 from setuptools import find_packages
 from os import path
