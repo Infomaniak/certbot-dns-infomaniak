@@ -1,3 +1,5 @@
+# SPDX-FileCopyrightText: 2021-2022 Rene Luria <rene.luria@infomaniak.com>
+# SPDX-License-Identifier: Apache-2.0
 """Tests for certbot_dns_infomaniak.dns_infomaniak."""
 
 import unittest

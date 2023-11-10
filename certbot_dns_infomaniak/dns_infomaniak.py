@@ -1,3 +1,7 @@
+# SPDX-FileCopyrightText: 2021-2022 Rene Luria <rene.luria@infomaniak.com>
+# SPDX-FileCopyrightText: 2021-2022 Yannik Roth <info@fuechslein.ch>
+# SPDX-FileCopyrightText: 2021      Romain Autran <romain.autran@2itea.ch>
+# SPDX-License-Identifier: Apache-2.0
 """DNS Authenticator for Infomaniak"""
 import json
 import logging
