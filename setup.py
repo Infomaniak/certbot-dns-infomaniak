@@ -11,7 +11,6 @@ install_requires = [
     "certbot>=0.31.0",
     "setuptools",
     "requests",
-    "mock",
     "requests-mock",
     "idna",
 ]
