@@ -178,7 +178,7 @@ class _APIDomain:
                     and x["type"] == record["type"]
                     and x["target"] == record["target"]
                 ),
-                self._get_request("/1/domain/{domain_id}/dns/record".format(domain_id=domain_id)),
+                self._get_request("/1/domain/{domain_id}/dns/record?search={fqdn}&filter[types][]={type}".format(domain_id=domain_id, fqdn=fqdn, type=record["type"])),
             )
         )
 
