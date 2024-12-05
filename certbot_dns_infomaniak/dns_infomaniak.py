@@ -119,8 +119,10 @@ class _APIDomain:
         :param dict payload : body of request
         """
         url = self.baseUrl + url
+        headers = {"Content-Type": "application/json"}
+        json_data = json.dumps(payload)
         logger.debug("POST %s", url)
-        with self.session.post(url, data=payload) as req:
+        with self.session.post(url, data=json_data, headers=headers) as req:
             try:
                 result = req.json()
             except json.decoder.JSONDecodeError as exc:
