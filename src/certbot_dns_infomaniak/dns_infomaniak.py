@@ -195,12 +195,16 @@ class _APIDomain:
             result = self._get_request(
                 "/1/product?service_name=domain&customer_name={domain}".format(domain=domain),
             )
-            if len(result) == 1:
-                return (
-                    result[0]["id"],
-                    domain,
-                )
+
+            for item in result:
+                if item.get("customer_name", "").lower() == domain.lower():
+                    return (
+                        item["id"],
+                        domain,
+                    )
+
             domain = domain[domain.find(".") + 1:]
+
         raise errors.PluginError("Domain not found")
 
     def add_txt_record(self, domain, source, target, ttl=300):
