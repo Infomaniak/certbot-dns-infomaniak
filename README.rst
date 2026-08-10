@@ -11,10 +11,10 @@ This plugin enables usage of Infomaniak public API to complete ``dns-01`` challe
 Issue a token
 -------------
 
-At your Infomaniak manager dashboard_, to to the API section and generate a token
-with "Domain" scope
+At your Infomaniak manager dashboard_, go to the API section and generate a token
+with ``dns:read`` and ``dns:write`` scopes.
 
-.. _dashboard: https://manager.infomaniak.com/v3/infomaniak-api
+.. _dashboard: https://manager.infomaniak.com/v3/ng/profile/user/token/list
 
 
 Installation
