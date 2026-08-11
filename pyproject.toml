@@ -16,7 +16,6 @@ dependencies = [
     "certbot>=0.31.0",
     "idna",
     "requests",
-    "requests-mock",
 ]
 classifiers = [
     "Development Status :: 3 - Alpha",
@@ -47,6 +46,7 @@ dns-infomaniak = "certbot_dns_infomaniak.dns_infomaniak:Authenticator"
 [dependency-groups]
 dev = [
     "pytest",
+    "requests-mock",
     "ruff",
 ]
 
