@@ -145,6 +145,52 @@ class APIDomainTest(unittest.TestCase):
         )
         self.assertEqual(self.client.record_ids, [RECORD_ID])
 
+    def test_add_txt_record_apex(self) -> None:
+        """add_txt_record for zone apex should use '.' as source."""
+        self._register_response(
+            f"/2/zones/{DOMAIN}/exists",
+            data=True,
+        )
+        self._register_response(
+            f"/2/zones/{DOMAIN}/records",
+            data={
+                "id": RECORD_ID, "type": "TXT",
+                "source": ".",
+                "target": self.record_content,
+                "ttl": self.record_ttl,
+            },
+            method="POST",
+        )
+        self.client.add_txt_record(
+            DOMAIN, f"_acme-challenge.{DOMAIN}", self.record_content, self.record_ttl,
+        )
+        self.assertEqual(self.client.record_ids, [RECORD_ID])
+        posted = self.adapter.request_history[-1].json()
+        self.assertEqual(posted["source"], "_acme-challenge")
+
+    def test_add_txt_record_subdomain(self) -> None:
+        """add_txt_record for sub-domain should send relative source."""
+        self._register_response(
+            f"/2/zones/{DOMAIN}/exists",
+            data=True,
+        )
+        self._register_response(
+            f"/2/zones/{DOMAIN}/records",
+            data={
+                "id": RECORD_ID, "type": "TXT",
+                "source": "_acme-challenge.mail",
+                "target": self.record_content,
+                "ttl": self.record_ttl,
+            },
+            method="POST",
+        )
+        self.client.add_txt_record(
+            DOMAIN, f"_acme-challenge.mail.{DOMAIN}", self.record_content, self.record_ttl,
+        )
+        self.assertEqual(self.client.record_ids, [RECORD_ID])
+        posted = self.adapter.request_history[-1].json()
+        self.assertEqual(posted["source"], "_acme-challenge.mail")
+
     def test_add_txt_record_fail_to_find_domain(self) -> None:
         """add_txt_record with non existing domain should fail."""
         self._register_error(
