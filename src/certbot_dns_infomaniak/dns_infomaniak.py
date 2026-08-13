@@ -213,6 +213,8 @@ class _APIDomain:
             relative_source = source[:source.rfind("." + idna.encode(zone).decode("ascii"))]
         else:
             relative_source = source
+        if relative_source == "":
+            relative_source = "."
         logger.debug("add_txt_record %s %s %s", zone, relative_source, target)
         data = {"type": "TXT", "source": relative_source, "target": target, "ttl": ttl}
         result = self._post_request(f"/2/zones/{zone}/records", data)
