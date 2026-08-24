@@ -10,6 +10,7 @@ import sys
 import unittest
 from unittest import mock
 
+import idna
 import requests_mock
 from certbot.errors import PluginError
 
@@ -191,6 +192,58 @@ class APIDomainTest(unittest.TestCase):
         posted = self.adapter.request_history[-1].json()
         self.assertEqual(posted["source"], "_acme-challenge.mail")
 
+    def test_add_txt_record_idn_zone(self) -> None:
+        """add_txt_record should IDNA-encode the zone in API URLs."""
+        zone_unicode = "münchen.ch"
+        zone_idna = idna.encode(zone_unicode).decode("ascii")
+        self._register_response(
+            f"/2/zones/{zone_idna}/exists",
+            data=True,
+        )
+        self._register_response(
+            f"/2/zones/{zone_idna}/records",
+            data={
+                "id": RECORD_ID, "type": "TXT",
+                "source": self.record_name,
+                "target": self.record_content,
+                "ttl": self.record_ttl,
+            },
+            method="POST",
+        )
+        self.client.add_txt_record(
+            zone_unicode, f"{self.record_name}.{zone_idna}",
+            self.record_content, self.record_ttl,
+        )
+        self.assertEqual(self.client.record_ids, [RECORD_ID])
+        posted = self.adapter.request_history[-1].json()
+        self.assertEqual(posted["source"], self.record_name)
+
+    def test_add_txt_record_idn_apex(self) -> None:
+        """add_txt_record for IDN zone apex should use '.' as source."""
+        zone_unicode = "münchen.ch"
+        zone_idna = idna.encode(zone_unicode).decode("ascii")
+        self._register_response(
+            f"/2/zones/{zone_idna}/exists",
+            data=True,
+        )
+        self._register_response(
+            f"/2/zones/{zone_idna}/records",
+            data={
+                "id": RECORD_ID, "type": "TXT",
+                "source": ".",
+                "target": self.record_content,
+                "ttl": self.record_ttl,
+            },
+            method="POST",
+        )
+        self.client.add_txt_record(
+            zone_unicode, f"_acme-challenge.{zone_idna}",
+            self.record_content, self.record_ttl,
+        )
+        self.assertEqual(self.client.record_ids, [RECORD_ID])
+        posted = self.adapter.request_history[-1].json()
+        self.assertEqual(posted["source"], "_acme-challenge")
+
     def test_add_txt_record_fail_to_find_domain(self) -> None:
         """add_txt_record with non existing domain should fail."""
         self._register_error(
@@ -245,6 +298,35 @@ class APIDomainTest(unittest.TestCase):
         self.client.record_ids = [RECORD_ID]
         self.client.del_txt_record(
             DOMAIN, f"{self.record_name}.{DOMAIN}",
+            self.record_content,
+        )
+        self.assertEqual(self.client.record_ids, [])
+
+    def test_del_txt_record_idn_zone(self) -> None:
+        """del_txt_record should IDNA-encode the zone in API URLs."""
+        zone_unicode = "münchen.ch"
+        zone_idna = idna.encode(zone_unicode).decode("ascii")
+        self._register_response(
+            f"/2/zones/{zone_idna}/exists",
+            data=True,
+        )
+        self._register_response(
+            f"/2/zones/{zone_idna}/records/{RECORD_ID}",
+            data={
+                "id": RECORD_ID, "type": "TXT",
+                "source": self.record_name,
+                "target": self.record_content,
+                "ttl": self.record_ttl,
+            },
+        )
+        self._register_response(
+            f"/2/zones/{zone_idna}/records/{RECORD_ID}",
+            data=True,
+            method="DELETE",
+        )
+        self.client.record_ids = [RECORD_ID]
+        self.client.del_txt_record(
+            zone_unicode, f"{self.record_name}.{zone_idna}",
             self.record_content,
         )
         self.assertEqual(self.client.record_ids, [])

@@ -181,19 +181,20 @@ class _APIDomain:
 
         :param str domain: domain name
 
-        :returns: zone name
+        :returns: IDNA-encoded zone name
         """
         while "." in domain:
+            encoded_domain = idna.encode(domain).decode("ascii")
             try:
                 result = self._get_request(
-                    f"/2/zones/{domain}/exists",
+                    f"/2/zones/{encoded_domain}/exists",
                 )
             except errors.PluginError as err:
                 if "cannot authenticate" in str(err):
                     raise
                 result = False
             if result is True:
-                return domain
+                return encoded_domain
             domain = domain[domain.find(".") + 1:]
         msg = "Domain not found"
         raise errors.PluginError(msg)
@@ -209,8 +210,8 @@ class _APIDomain:
         logger.debug("add_txt_record %s %s %s", domain, source, target)
         zone = self._find_zone(domain)
         logger.debug("%s", zone)
-        if source.endswith("." + idna.encode(zone).decode("ascii")):
-            relative_source = source[:source.rfind("." + idna.encode(zone).decode("ascii"))]
+        if source.endswith("." + zone):
+            relative_source = source[:source.rfind("." + zone)]
         else:
             relative_source = source
         if relative_source == "":
