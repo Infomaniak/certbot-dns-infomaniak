@@ -1,0 +1,167 @@
+# Traefik reverse proxy with Let's Encrypt certificates (certbot-dns-infomaniak)
+#
+# Example on how to use infomaniak DNS API to get a wildcard certificate for your domain.
+#
+# This compose runs:
+#   - reverse-proxy (Traefik v3) on ports 80/443, TLS termination, HTTP→HTTPS redirect
+#   - homepage dashboard (gethomepage/homepage) behind Traefik at your domain
+#   - create_or_renew_certificate (manual) for obtaining/renewing wildcard certs via DNS-01
+#
+# Flow:
+#   1. Run create_or_renew_certificate first (profile): obtains certs, writes traefik-tls.yml
+#   2. docker compose up: Traefik loads certs from letsencrypt volume, serves Homepage over HTTPS
+#   3. Unknown subdomains are redirected to the main domain (catchall)
+#
+# Required external files:
+#
+#   1. infomaniak_credentials.ini
+#      - Infomaniak DNS API credentials for certbot (dns-01 challenge)
+#      - Format: dns_infomaniak_token = YOUR_API_TOKEN
+#
+#   2. .env (create from .env.example: cp .env.example .env then edit)
+#      - Format: KEY=value (no spaces around =)
+#      - Variables:
+#          CERTBOT_DOMAIN    Your domain (e.g. example.com)
+
+services:
+
+
+
+# This service creates or renews a certificate for the given domain
+  create_or_renew_certificate:
+    profiles:
+      - create_or_renew_certificate
+    build:
+      dockerfile_inline: |
+        FROM docker.io/certbot/certbot:latest AS certbot
+
+        LABEL description="This plugin enables usage of Infomaniak public API to complete dns-01 challenges."
+        LABEL website="https://github.com/Infomaniak/certbot-dns-infomaniak"
+
+        ENV INFOMANIAK_API_TOKEN="" 
+        ENV CERT_NAME="certbot"
+
+        # COPY entrypoint.sh /entrypoint.sh
+        RUN python tools/pip_install.py --no-cache-dir certbot-dns-infomaniak
+        VOLUME /cert
+
+        
+        COPY <<'EOF' create_cert.sh
+        #!/bin/sh
+        { echo "tls:"; echo "  certificates:"; echo "    - certFile: /etc/letsencrypt/live/$${CERTBOT_DOMAIN}/fullchain.pem"; echo "      keyFile: /etc/letsencrypt/live/$${CERTBOT_DOMAIN}/privkey.pem"; } > /etc/letsencrypt/traefik-tls.yml
+        echo "CERTBOT_DOMAIN: $${CERTBOT_DOMAIN}"
+        certbot certonly --manual \
+        --server https://acme-v02.api.letsencrypt.org/directory \
+        --preferred-challenges dns-01 \
+        --agree-tos \
+        --register-unsafely-without-email \
+        --no-eff-email \
+        --dns-infomaniak-credentials /run/secrets/infomaniak-credentials.ini \
+        --key-type ecdsa \
+        -d *.$$CERTBOT_DOMAIN -d $$CERTBOT_DOMAIN \
+        --keep-until-expiring \
+        -v \
+        
+        EOF
+
+        RUN chmod u+x create_cert.sh
+        CMD [ "./create_cert.sh" ]
+  
+    environment:
+      - CERTBOT_DOMAIN=${CERTBOT_DOMAIN:-example.com}
+
+    secrets:
+      - infomaniak-credentials.ini
+
+    volumes:
+      - letsencrypt:/etc/letsencrypt
+
+    entrypoint: ""
+
+
+
+  reverse-proxy: 
+    image: traefik:v3
+    container_name: reverse-proxy
+
+    # Enables the web UI and tells Traefik to listen to docker
+    command: 
+      - --providers.docker
+      - --providers.docker.exposedByDefault=false
+      - --providers.file.filename=/etc/letsencrypt/traefik-tls.yml
+      ## Static configuration
+      - --entryPoints.web.address=:80
+      - --entryPoints.web.forwardedHeaders.insecure
+      - --accesslog=true
+      
+      - --entryPoints.websecure.address=:443
+      - --entryPoints.websecure.forwardedHeaders.insecure
+
+      - --entrypoints.web.http.redirections.entrypoint.to=websecure
+      - --entrypoints.web.http.redirections.entrypoint.scheme=https
+      - --entrypoints.web.http.redirections.entrypoint.permanent=false
+    
+      - --log.level=DEBUG
+    networks: 
+      - proxy
+
+    ports:
+      # The HTTP port
+      - "80:80"
+      - "443:443"
+
+    volumes:
+      # So that Traefik can listen to the Docker events
+      - /var/run/docker.sock:/var/run/docker.sock
+      - letsencrypt:/etc/letsencrypt:ro  # Read-only access to Certbot's certs
+  homepage:
+    image: ghcr.io/gethomepage/homepage:latest
+    volumes:
+      - ./config:/app/config
+      - /var/run/docker.sock:/var/run/docker.sock:ro # Vital for discovery
+    labels:
+      - "traefik.enable=true"
+      - "traefik.http.services.home-svc.loadbalancer.server.port=3000"
+      
+      - "traefik.http.routers.default.rule=Host(`${CERTBOT_DOMAIN:-example.com}`)"  
+      - "traefik.http.routers.default.priority=10"  
+      - "traefik.http.routers.default.tls=true" 
+      - "traefik.http.routers.default.tls.options=default"
+      # THE REDIRECT MIDDLEWARE
+      # This looks for any URL and replaces it with your main dashboard URL
+      - "traefik.http.middlewares.catchall-redirect.redirectregex.regex=^https?://.*"
+      - "traefik.http.middlewares.catchall-redirect.redirectregex.replacement=https://${CERTBOT_DOMAIN:-example.com}"
+      - "traefik.http.middlewares.catchall-redirect.redirectregex.permanent=false"
+
+      # THE CATCH-ALL ROUTER
+      - "traefik.http.routers.catchall.tls=true"
+      - "traefik.http.routers.catchall.rule=PathPrefix(`/`)"
+      - "traefik.http.routers.catchall.entrypoints=websecure"
+      - "traefik.http.routers.catchall.priority=-100"
+      - "traefik.http.routers.catchall.middlewares=catchall-redirect"
+      
+      # Use an internal dummy service so Traefik doesn't complain
+      - "traefik.http.routers.catchall.service=noop@internal"
+
+
+    environment:
+            - HOMEPAGE_ALLOWED_HOSTS=* # <--- This allows all domains
+
+    networks:
+      - proxy
+
+networks:
+    proxy:
+        name: proxy-net
+
+# This volume stores certs (from create_or_renew_certificate) and traefik-tls.yml
+# Certificate Path: /etc/letsencrypt/live/{DOMAIN}/fullchain.pem
+# Private Key Path: /etc/letsencrypt/live/{DOMAIN}/privkey.pem
+# TLS Config: /etc/letsencrypt/traefik-tls.yml (created by create_or_renew_certificate)
+
+volumes:
+  letsencrypt:
+
+secrets:
+  infomaniak-credentials.ini:
+    file: ./infomaniak_credentials.ini

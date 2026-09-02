@@ -1,0 +1,3 @@
+# Secrets - never commit
+infomaniak_credentials.ini
+.env
